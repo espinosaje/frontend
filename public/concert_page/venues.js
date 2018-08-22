@@ -4,7 +4,10 @@ $(document).ready(function() {
 	// if its "1", implement functionallity to look for the exact venue by pushing a button based on 3 fields
 	// if it's "0", show a list of venues matching the name and select the correct one
 	var venueSearch = 1;
+	
 	var venue_data;
+	var artist_data;
+	var p_state;
 	
 	if (venueSearch == 0){
 		$('#venue-location').hide();
@@ -35,7 +38,7 @@ $(document).ready(function() {
 	$("#venue-btn").click(function(){		
 		var p_venue = $('#venue-in').val();
 		var p_city = $('#city-in').val();
-		var p_state = $('#state-in').val();
+		p_state = $('#state-in').val();
 		
 		$('.venue-div li').remove();
 		
@@ -48,7 +51,8 @@ $(document).ready(function() {
         url: "http://localhost:8081/maven_rest_ws-0.1.0/setlist/venue",		
 		data: { name: p_venue,
 				cityName: p_city,
-				stateCode: p_state}
+				stateCode: p_state,
+				lookForLocalDatabaseFirst: true}
 		}).then(function(data) {
 			if (data != null){
 				$('.venue-div').append('<li>Venue Found:'+data[0].name+', @'+data[0].city.name+' </li>');
@@ -79,6 +83,7 @@ $(document).ready(function() {
 		}).then(function(data) {
 			if (data != null){
 				$('.band-div').append('<li>Band Found:'+data.name+', id:'+data.mbid+' </li>');
+				artist_data = data;	//not sure if we need this, it would just be for artist ID
 			}
 		  
 		});
@@ -94,13 +99,20 @@ $(document).ready(function() {
 		$.ajax({
 		statusCode: {
 		  500: function() {			
-			$('.band-div').append('<li>Couldn''t create event</li>');
+			$('.band-div').append('<li>event not created</li>');
 		   }
 		},	
         url: "http://localhost:8081/maven_rest_ws-0.1.0/event/add",		//?name=Tool&venue=3&tour=Lateralus&year=2001&fest=0&date=31-10-2001
-		data: { name: p_band,
+		data: 
+			{ 	name: p_band,
 				venue: venue_data.id,
-				tour: p_state}
+				tour: p_state,
+				fest: false,
+				artist: p_band,
+				s_headliner: true, //pull from "band-chb"
+				venue_name: venue_data.name
+				// ...add the rest
+			}
 		}).then(function(data) {
 			if (data != null){
 				$('.band-div').append('<li>Band Found:'+data[0].name+', @'+data[0].city.name+' </li>');
